@@ -26,3 +26,42 @@ impl Processo {
         Ok(exit_code)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::process::Command;
+
+    #[test]
+    fn test_wait_success() -> io::Result<()> {
+        // Processo que termina imediatamente com sucesso (código 0)
+        let mut processo = Processo {
+            processo: Command::new("true").spawn()?
+        };
+        
+        assert_eq!(processo.wait()?, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_wait_failure() -> io::Result<()> {
+        // Processo que termina imediatamente com erro (código 1)
+        let mut processo = Processo {
+            processo: Command::new("false").spawn()?
+        };
+        
+        assert_eq!(processo.wait()?, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_wait_no_exit_code() {
+        // Simula um processo terminado por sinal (sem código de saída)
+        let mut processo = Processo {
+            processo: Command::new("sleep").arg("5").spawn().unwrap()
+        };
+        
+        processo.processo.kill().unwrap(); // Termina com sinal
+        assert_eq!(processo.wait().unwrap(), -1); // Deve retornar -1
+    }
+}
