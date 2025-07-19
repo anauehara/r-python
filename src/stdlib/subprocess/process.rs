@@ -125,6 +125,25 @@ pub fn run_shell_command(
     }
 }
 
+use std::process::{Child, ExitStatus};
+use std::io;
+
+/// Struct representing a running process.
+/// It wraps a `std::process::Child` and provides a wait method.
+pub struct Processo {
+    pub processo: Child,
+}
+
+impl Processo {
+    /// Waits for the process to finish and returns its exit code.
+    /// Returns -1 if the exit code cannot be determined.
+    pub fn wait(&mut self) -> io::Result<i32> {
+        let status: ExitStatus = self.processo.wait()?;
+        Ok(status.code().unwrap_or(-1))
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -502,4 +521,36 @@ mod tests {
         assert!(stdout.contains("Line 1"));
         assert!(stdout.contains("Line 10"));
     }
+
+        #[test]
+    fn test_wait_success() {
+        // Test command exits successfully with code 0
+        let mut processo = Processo {
+            processo: Command::new("true").spawn().unwrap(),
+        };
+        let exit_code = processo.wait().unwrap();
+        assert_eq!(exit_code, 0);
+    }
+
+    #[test]
+    fn test_wait_failure() {
+        // Test command exits with failure code (usually 1)        
+        let mut processo = Processo {
+            processo: Command::new("false").spawn().unwrap(),
+        };
+        let exit_code = processo.wait().unwrap();
+        assert_eq!(exit_code, 1);
+    }
+
+    #[test]
+    fn test_wait_killed() {
+        // Test command is killed before finishing; should return -1        
+        let mut processo = Processo {
+            processo: Command::new("sleep").arg("5").spawn().unwrap(),
+        };
+        processo.processo.kill().unwrap();
+        let exit_code = processo.wait().unwrap();
+        assert_eq!(exit_code, -1); // May vary by OS
+    }
+
 }
