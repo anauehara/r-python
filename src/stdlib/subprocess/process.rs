@@ -168,7 +168,7 @@ impl Processo {
 
 }
 
-use std::process::{Child, ChildStdin, ChildStdout, ChildStderr};
+use std::process::{ChildStdin, ChildStdout, ChildStderr};
 
 /// Representa um processo em execução com acesso a stdin, stdout e stderr.
 pub struct PopenProcess {
@@ -194,7 +194,7 @@ pub fn popen_command(
     cmd.args(args);
     cmd.stdin(Stdio::piped());
 
-    /// Redireciona stdout/stderr para pipes conforme solicitado
+    // Redireciona stdout/stderr para pipes conforme solicitado
 	if options.capture_output {
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
